@@ -2,23 +2,79 @@
  * Created by jakob on 03/08/2016.
  */
 
-var domain = "http://localhost:8080";
-var register = {};
+var domain = "https://localhost:8443";
+var registerRequest = {};
 
-window.onload = function() {
-    sendRequest("GET", domain + "/rest/server/start_registration?user=hans",
+function startRegistration() {
+    sendRequest("GET", domain + "/rest/server/start_registration?user=" + getUser(),
     null,
     function (response) {
-        register = JSON.parse(response);
-        console.log(register);
+
+        registerRequest = JSON.parse(response);
+        console.log(registerRequest);
         document.getElementById("hello").innerHTML =
-            register.registerRequests[0].challenge;
-        window.u2f.register(register.registerRequests[0]
-        , []
+            "Please use your key";
+        window.u2f.register(domain, registerRequest.registerRequests,[]
         , function(data) {
                console.log(data);
+                finishRegistration(data);
             });
     });
+}
+
+function finishRegistration(data) {
+    sendRequest("POST", domain + "/rest/server/finish_registration",
+        "tokenResponse=" + JSON.stringify(data) +"&"+
+        "user=" + getUser(),
+    function (response) {
+        if (response === "") {
+            document.getElementById("hello").innerHTML = "UNAUTHORIZED ACCESS!"
+        }
+        document.getElementById("hello").innerHTML =
+            response;
+    })
+}
+
+function startAuthentication() {
+    document.getElementById("hello").innerHTML = "Please use your key";
+    sendRequest("GET", domain + "/rest/server/start_authentication?user="+getUser(),
+        null,
+        function (response) {
+            if (response === "") {
+                document.getElementById("hello").innerHTML = "User has not registered device";
+            } else {
+                var authRequest = JSON.parse(response);
+                console.log(authRequest);
+                console.log(authRequest.authenticateRequests[0]);
+
+                var req = authRequest.authenticateRequests[0];
+
+                u2f.sign(domain, req.challenge, [req],
+                    function (data) {
+                        console.log(data);
+                        endAuthentication(data);
+                    });
+            }
+        });
+}
+
+function endAuthentication(data) {
+    sendRequest("POST", domain + "/rest/server/end_authentication",
+        "user=" + getUser() +
+        "&tokenResponse=" + JSON.stringify(data),
+        function (response) {
+            if (response==="") {
+                document.getElementById("hello").innerHTML = "Did not recognize device"
+            } else {
+                document.getElementById("hello").innerHTML = response;
+            }
+        })
+}
+
+function getUser() {
+    var user = "" + document.getElementById("user").value;
+    console.log(user);
+    return user;
 }
 
 // From the dWebTek course

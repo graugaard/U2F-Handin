@@ -2,6 +2,8 @@
 import com.yubico.u2f.U2F;
 import com.yubico.u2f.data.DeviceRegistration;
 import com.yubico.u2f.data.messages.*;
+import com.yubico.u2f.exceptions.DeviceCompromisedException;
+import com.yubico.u2f.exceptions.NoEligibleDevicesException;
 
 import java.security.cert.CertificateException;
 import java.util.*;
@@ -19,7 +21,7 @@ import javax.ws.rs.core.Context;
 @Path("server")
 public class Server {
 
-    public static final String APP_ID = "https://localhost:8080";
+    public static final String APP_ID = "https://localhost:8443";
 
     private final U2F u2f = new U2F();
     private final Map<String, String> requestStorage = new HashMap<String, String>();
@@ -30,22 +32,19 @@ public class Server {
 
     @GET
     @Path("start_registration")
-    public String startRegistration(@QueryParam("user") String user) throws ExecutionException
-    {
+    public String startRegistration(@QueryParam("user") String user) throws ExecutionException {
         RegisterRequestData registerRequestData = u2f.startRegistration(APP_ID, getRegistrations(user));
-        requestStorage.put(registerRequestData.getRequestId(), registerRequestData.toJson());
+        addRequst(registerRequestData.getRequestId(), registerRequestData.toJson());
         return registerRequestData.toJson();
 
     }
 
     @Context
-    private void setContext(ServletContext context)
-    {
+    private void setContext(ServletContext context) {
         this.context = context;
     }
 
-    private ServletContext getContext()
-    {
+    private ServletContext getContext() {
         return context;
     }
 
@@ -53,13 +52,12 @@ public class Server {
     @Path("finish_registration")
     public String finishRegistration(@FormParam("tokenResponse") String response,
                                      @FormParam("user") String user)
-            throws CertificateException, NoSuchFieldException
-    {
+            throws CertificateException, NoSuchFieldException {
         RegisterResponse registerResponse = RegisterResponse.fromJson(response);
 
         // lookup
         RegisterRequestData registerData = RegisterRequestData.fromJson(
-                requestStorage.remove(registerResponse.getRequestId()));
+                removeRequest(registerResponse.getRequestId()));
         DeviceRegistration registration = u2f.finishRegistration(registerData, registerResponse);
 
         //Attestation attestation = metadataService.getAttestation(registration.getAttestationCertificate());
@@ -67,42 +65,45 @@ public class Server {
         addRegistration(user, registration);
         StringBuilder buf = new StringBuilder();
         buf.append("<p>Successfully registered device:</p>");
-        /*if(!attestation.getVendorProperties().isEmpty()) {
-            buf.append("<p>Vendor metadata</p><pre>");
-            for(Map.Entry<String, String> entry : attestation.getVendorProperties().entrySet()) {
-                buf.append(entry.getKey())
-                        .append(": ")
-                        .append(entry.getValue())
-                        .append("\n");
-            }
-            buf.append("</pre>");
-        } else {
-            buf.append("<p>No vendor metadata present!</p>");
-        }
-        if(!attestation.getDeviceProperties().isEmpty()) {
-            buf.append("<p>Device metadata</p><pre>");
-            for(Map.Entry<String, String> entry : attestation.getDeviceProperties().entrySet()) {
-                buf.append(entry.getKey())
-                        .append(": ")
-                        .append(entry.getValue())
-                        .append("\n");
-            }
-            buf.append("</pre>");
-        } else {
-            buf.append("<p>No device metadata present!</p>");
-        }
-        if(!attestation.getTransports().isEmpty()) {
-            buf.append("<p>Device transports: ")
-                    .append(attestation.getTransports())
-                    .append("</p>");
-        } else {
-            buf.append("<p>No device transports reported!</p>");
-        }
-        buf.append("<p>Registration data</p><pre>")
-                .append(registration)
-                .append("</pre>");*/
 
         return buf.toString();
+    }
+
+    @GET
+    @Path("start_authentication")
+    public String startAuthentication(@QueryParam("user") String user)
+            throws ExecutionException, NoEligibleDevicesException
+    {
+        try {
+            AuthenticateRequestData authenticateRequestData = u2f.startAuthentication(APP_ID, getRegistrations(user));
+            addRequst(authenticateRequestData.getRequestId(), authenticateRequestData.toJson());
+            return authenticateRequestData.toJson();
+        } catch (NoEligibleDevicesException e) {
+            return "";
+        }
+    }
+
+    @POST
+    @Path("end_authentication")
+    public String endAuthentication (@FormParam("user") String user,
+                                     @FormParam("tokenResponse") String response) throws ExecutionException {
+        DeviceRegistration registration = null;
+        try {
+        AuthenticateResponse authenticateResponse = AuthenticateResponse.fromJson(response);
+        AuthenticateRequestData authenticateRequest =
+                AuthenticateRequestData.fromJson(removeRequest(authenticateResponse.getRequestId()));
+            registration = u2f.finishAuthentication(authenticateRequest, authenticateResponse, getRegistrations(user));
+        } catch (DeviceCompromisedException e) {
+            return "<p>Device possibly compromised and therefore blocked: " + e.getMessage() + "</p>";
+        } catch (Exception e){
+            return "";
+        }
+        finally {
+            if (registration != null) {
+                getUserStorage().get(user).put(registration.getKeyHandle(), registration.toJson());
+            }
+        }
+        return "<p>Successfully authenticated!<p>";
     }
 
 
@@ -148,5 +149,25 @@ public class Server {
     private void addRegistration(String user, DeviceRegistration registration)
     {
         getUserStorage().get(user).put(registration.getKeyHandle(), registration.toJson());
+    }
+
+    private void addRequst(String requestID, String requestData)
+    {
+        Map<String, String> m = (Map<String,String>) getContext().getAttribute("requestStorage");
+        if (m == null) {
+            m = new HashMap<String, String>();
+            getContext().setAttribute("requestStorage", m);
+        }
+        m.put(requestID, requestData);
+    }
+
+    private Map<String, String> getRequestStorage()
+    {
+        return (Map<String,String>) getContext().getAttribute("requestStorage");
+    }
+
+    private String removeRequest(String requestID)
+    {
+        return getRequestStorage().remove(requestID);
     }
 }

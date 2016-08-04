@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="U2F-Handin:war">
+    <output-path>$PROJECT_DIR$/out/artifacts/U2F_Handin_war</output-path>
+    <root id="archive" name="U2F-Handin.war">
+      <element id="artifact" artifact-name="U2F-Handin:war exploded" />
+    </root>
+  </artifact>
+</component>

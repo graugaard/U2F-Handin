@@ -2,10 +2,14 @@
 <head>
     <title>Hi</title>
     <script src="https://demo.yubico.com/js/u2f-api.js"></script>
+
 </head>
 
 <body>
     <script src="script.js"></script>
     <div id="hello"></div>
+    <input type="text" id="user" placeholder="username">
+    <button onclick="startRegistration()">Register</button>
+    <button onclick="startAuthentication()">Authenticate</button>
 </body>
 </html>
