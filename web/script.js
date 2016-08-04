@@ -3,12 +3,21 @@
  */
 
 var domain = "http://localhost:8080";
+var register = {};
 
 window.onload = function() {
-    sendRequest("GET", domain + "/rest/hello",
+    sendRequest("GET", domain + "/rest/server/start_registration?user=hans",
     null,
     function (response) {
-        document.getElementById("hello").innerHTML = response;
+        register = JSON.parse(response);
+        console.log(register);
+        document.getElementById("hello").innerHTML =
+            register.registerRequests[0].challenge;
+        window.u2f.register(register.registerRequests[0]
+        , []
+        , function(data) {
+               console.log(data);
+            });
     });
 }
 

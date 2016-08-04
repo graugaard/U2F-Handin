@@ -12,6 +12,23 @@
             <groupId>com.yubico</groupId>
             <artifactId>u2flib-server-core</artifactId>
             <version>0.16.0</version>
+            <exclusions>
+                <exclusion>  <!-- declare the exclusion here -->
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.yubico</groupId>
+            <artifactId>u2flib-server-attestation</artifactId>
+            <version>0.16.0</version>
+            <exclusions>
+                <exclusion>  <!-- declare the exclusion here -->
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     

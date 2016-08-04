@@ -9,6 +9,13 @@
         </element>
         <element id="directory" name="lib">
           <element id="library" level="project" name="Jersey-2.2" />
+          <element id="library" level="project" name="Maven: com.yubico:u2flib-server-attestation:0.16.0" />
+          <element id="library" level="project" name="Maven: com.yubico:u2flib-server-core:0.16.0" />
+          <element id="library" level="project" name="Maven: org.bouncycastle:bcpkix-jdk15on:1.54" />
+          <element id="library" level="project" name="Maven: org.bouncycastle:bcprov-jdk15on:1.54" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.6.0" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.6.5" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.6.5" />
         </element>
       </element>
     </root>
