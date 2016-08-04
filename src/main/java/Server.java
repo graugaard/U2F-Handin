@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
 
 /**
@@ -21,8 +22,8 @@ import javax.ws.rs.core.Context;
 @Path("server")
 public class Server {
 
-    //public static final String APP_ID = "https://localhost:8443";
-    public static final String APP_ID = "https://graugaard.bobach:8443";
+    public static final String APP_ID = "https://localhost:8443";
+    //public static final String APP_ID = "https://graugaard.bobach:8443";
 
     private final U2F u2f = new U2F();
     private final Map<String, String> requestStorage = new HashMap<String, String>();
@@ -33,11 +34,10 @@ public class Server {
 
     @GET
     @Path("start_registration")
-    public String startRegistration(@QueryParam("user") String user) throws ExecutionException {
+    public Response startRegistration(@QueryParam("user") String user) throws ExecutionException {
         RegisterRequestData registerRequestData = u2f.startRegistration(APP_ID, getRegistrations(user));
         addRequst(registerRequestData.getRequestId(), registerRequestData.toJson());
-        return registerRequestData.toJson();
-
+        return buildResponse(Response.Status.OK, registerRequestData.toJson());
     }
 
     @Context
@@ -51,7 +51,7 @@ public class Server {
 
     @POST
     @Path("finish_registration")
-    public String finishRegistration(@FormParam("tokenResponse") String response,
+    public Response finishRegistration(@FormParam("tokenResponse") String response,
                                      @FormParam("user") String user)
             throws CertificateException, NoSuchFieldException {
         RegisterResponse registerResponse = RegisterResponse.fromJson(response);
@@ -67,44 +67,50 @@ public class Server {
         StringBuilder buf = new StringBuilder();
         buf.append("<p>Successfully registered device:</p>");
 
-        return buf.toString();
+        return buildResponse(Response.Status.OK, buf.toString());
     }
 
     @GET
     @Path("start_authentication")
-    public String startAuthentication(@QueryParam("user") String user)
+    public Response startAuthentication(@QueryParam("user") String user)
             throws ExecutionException, NoEligibleDevicesException
     {
+        String s = "";
         try {
             AuthenticateRequestData authenticateRequestData = u2f.startAuthentication(APP_ID, getRegistrations(user));
             addRequst(authenticateRequestData.getRequestId(), authenticateRequestData.toJson());
-            return authenticateRequestData.toJson();
+            s = authenticateRequestData.toJson();
         } catch (NoEligibleDevicesException e) {
-            return "";
+            s = "";
         }
+
+        return buildResponse(Response.Status.ACCEPTED, s);
     }
 
     @POST
     @Path("end_authentication")
-    public String endAuthentication (@FormParam("user") String user,
+    public Response endAuthentication (@FormParam("user") String user,
                                      @FormParam("tokenResponse") String response) throws ExecutionException {
         DeviceRegistration registration = null;
+        String s = "";
         try {
         AuthenticateResponse authenticateResponse = AuthenticateResponse.fromJson(response);
         AuthenticateRequestData authenticateRequest =
                 AuthenticateRequestData.fromJson(removeRequest(authenticateResponse.getRequestId()));
             registration = u2f.finishAuthentication(authenticateRequest, authenticateResponse, getRegistrations(user));
         } catch (DeviceCompromisedException e) {
-            return "<p>Device possibly compromised and therefore blocked: " + e.getMessage() + "</p>";
+            return buildResponse(Response.Status.OK,
+                    "<p>Device possibly compromised and therefore blocked: "
+                            + e.getMessage() + "</p>");
         } catch (Exception e){
-            return "";
+            return buildResponse(Response.Status.OK, "");
         }
         finally {
             if (registration != null) {
                 getUserStorage().get(user).put(registration.getKeyHandle(), registration.toJson());
             }
         }
-        return "<p>Successfully authenticated!<p>";
+        return buildResponse(Response.Status.ACCEPTED,"<p>Successfully authenticated!<p>");
     }
 
 
@@ -167,6 +173,16 @@ public class Server {
         return (Map<String,String>) getContext().getAttribute("requestStorage");
     }
 
+    private Response buildResponse(Response.Status status, Object e)
+    {
+        return Response.status(status)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Headers", "origin, content-type, accept, authorization")
+                .header("Access-Control-Allow-Credentials", "true")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+                .header("Access-Control-Max-Age", "1209600")
+                .entity(e).build();
+    }
     private String removeRequest(String requestID)
     {
         return getRequestStorage().remove(requestID);

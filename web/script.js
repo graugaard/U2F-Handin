@@ -2,8 +2,8 @@
  * Created by jakob on 03/08/2016.
  */
 
-//var domain = "https://localhost:8443";
-var domain = "https://graugaard.bobach:8443";
+var domain = "https://localhost:8443";
+//var domain = "https://graugaard.bobach:8443";
 var service = '/U2F';
 var registerRequest = {};
 
@@ -16,7 +16,7 @@ function startRegistration() {
         console.log(registerRequest);
         document.getElementById("hello").innerHTML =
             "Please use your key";
-        window.u2f.register(domain, registerRequest.registerRequests,[]
+        u2f.register(domain, registerRequest.registerRequests,[]
         , function(data) {
                 console.log(data);
                 finishRegistration(data);
