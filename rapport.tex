@@ -1,0 +1,51 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[danish]{babel}
+\renewcommand{\danishhyphenmins}{22} % bedre orddeling
+\usepackage[sc]{mathpazo}
+\linespread{1.05}
+\usepackage[T1]{fontenc}
+%\usepackage[margin=3.5cm]{geometry}
+\usepackage[amsmath,thmmarks]{ntheorem}
+\usepackage{paralist}
+\usepackage{tikz}
+\newcommand{\iprod}[2]{\left\langle #1, #2\right\rangle}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\set}[1]{\left\{ #1 \right\}}
+\theoremstyle{plain}
+\newtheorem{lemma}{Lemma}
+\newtheorem{thm}{Theorem}
+\theoremstyle{nonumberplain}
+\theoremheaderfont{%
+  \normalfont\bfseries}
+\theorembodyfont{\normalfont}
+\theoremsymbol{\ensuremath{\square}}
+\theoremseparator{.}
+\newtheorem{proof}{Proof}
+\title{Identity and Privacy \\Handin 3}
+\author{Christian Bobach std. nr. 20104256\\Jakob Laursen std. nr. 20093220}
+\date{Summer 2016}
+\begin{document}
+\maketitle
+\section*{Introduktion}
+Vi vil her i rapporten beskrive hvordan vores første indtryk har været med brugen af YubiKey, først med opsætningen og brug som to face verifikation hos eksisterende udbydere, herefter vores egne erfaringer med implementation af en to face verifikations løsning.
+
+Vores U2F implementation med YubiKey kan findes her \footnote{\url{https://graugaard.bobach.eu:8443/}}. Da det er en server med et self signed certificat brokker browseren sig. Dette skal bare ignoreres og tillades.
+
+\section*{Brug af YubiKey}
+Forsøget med at sætte YubiKey op med gmail via usb gik nogenlunde. Efter en googlesøgning lykkedes det at finde ud af hvor pæcis YubiKey skulle registreres hos gmail. Herefter var det bare at følge instruktionerne som blev vist på skærmen. Det lykkedes aldrig at få YubiKey til at virke med FireFox og deres U2F plugin.
+
+Forsøget med at bruge NFC funktionen af YubiKey til at verrificere sig mod hos GitHub var derimod noget sværre. For det første benyttes en anden authentication app en den allerede benyttede. Efter instalationen af Yubico Authenticator appen, skulle den sættes op ved at scanne en QR-kode og parre den med YubiKey. At QR-scanneren Yubico bruger sammen med deres app skal have adgang til kontakter og lagerplads forstår vi ikke, det er i modstrid med hvad de prøver at løse. Da det lykkedes at få sat appen og YubiKey op med GitHub var der endnu en udfordring. Den authenticator app mobilen allerede havde, havde en indgang med Github, denne skulle fjernes før det kunne lykkedes at få adgang til GitHub med NFC verfikation af YubiKey. Herefter virkede det efter hensigten. YubiKey kan desværre ikke kommunikere genne et beskyttelses cover på mobilen.
+
+\section*{Implementation af U2F med YubiKey}
+Der var store problemer med at få serveren til at kommunikere via TLS/SSL. I implimentationsfacen kunne det fornemmes at det er en ikke færdig udviklet standart da dokumentationen i flere tilfælde var mangelfuld.
+
+
+\end{document}

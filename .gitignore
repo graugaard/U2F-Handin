@@ -44,3 +44,8 @@ crashlytics-build.properties
 fabric.properties
 
 .out
+*.aux
+*.log
+*.out
+*.pdf
+*.thm
