@@ -2,11 +2,13 @@
  * Created by jakob on 03/08/2016.
  */
 
-var domain = "https://localhost:8443";
+//var domain = "https://localhost:8443";
+var domain = "https://graugaard.bobach:8443";
+var service = '/U2F';
 var registerRequest = {};
 
 function startRegistration() {
-    sendRequest("GET", domain + "/rest/server/start_registration?user=" + getUser(),
+    sendRequest("GET", domain + service + "/rest/server/start_registration?user=" + getUser(),
     null,
     function (response) {
 
@@ -16,14 +18,14 @@ function startRegistration() {
             "Please use your key";
         window.u2f.register(domain, registerRequest.registerRequests,[]
         , function(data) {
-               console.log(data);
+                console.log(data);
                 finishRegistration(data);
             });
     });
 }
 
 function finishRegistration(data) {
-    sendRequest("POST", domain + "/rest/server/finish_registration",
+    sendRequest("POST", domain + service + "/rest/server/finish_registration",
         "tokenResponse=" + JSON.stringify(data) +"&"+
         "user=" + getUser(),
     function (response) {
@@ -37,7 +39,7 @@ function finishRegistration(data) {
 
 function startAuthentication() {
     document.getElementById("hello").innerHTML = "Please use your key";
-    sendRequest("GET", domain + "/rest/server/start_authentication?user="+getUser(),
+    sendRequest("GET", domain + service +"/rest/server/start_authentication?user="+getUser(),
         null,
         function (response) {
             if (response === "") {
@@ -59,7 +61,7 @@ function startAuthentication() {
 }
 
 function endAuthentication(data) {
-    sendRequest("POST", domain + "/rest/server/end_authentication",
+    sendRequest("POST", domain + service + "/rest/server/end_authentication",
         "user=" + getUser() +
         "&tokenResponse=" + JSON.stringify(data),
         function (response) {
