@@ -22,8 +22,8 @@ import javax.ws.rs.core.Response;
 @Path("server")
 public class Server {
 
-    public static final String APP_ID = "https://localhost:8443";
-    //public static final String APP_ID = "https://graugaard.bobach.eu:8443";
+    //public static final String APP_ID = "https://localhost:8443";
+    public static final String APP_ID = "https://graugaard.bobach.eu:8443";
 
     private final U2F u2f = new U2F();
     private final Map<String, String> requestStorage = new HashMap<String, String>();
@@ -84,7 +84,7 @@ public class Server {
             s = "";
         }
 
-        return buildResponse(Response.Status.ACCEPTED, s);
+        return buildResponse(Response.Status.OK, s);
     }
 
     @POST
@@ -110,7 +110,7 @@ public class Server {
                 getUserStorage().get(user).put(registration.getKeyHandle(), registration.toJson());
             }
         }
-        return buildResponse(Response.Status.ACCEPTED,"<p>Successfully authenticated!<p>");
+        return buildResponse(Response.Status.OK,"<p>Successfully authenticated!<p>");
     }
 
 
