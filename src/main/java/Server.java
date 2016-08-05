@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response;
 public class Server {
 
     public static final String APP_ID = "https://localhost:8443";
-    //public static final String APP_ID = "https://graugaard.bobach:8443";
+    //public static final String APP_ID = "https://graugaard.bobach.eu:8443";
 
     private final U2F u2f = new U2F();
     private final Map<String, String> requestStorage = new HashMap<String, String>();

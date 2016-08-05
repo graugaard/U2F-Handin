@@ -3,7 +3,7 @@
  */
 
 var domain = "https://localhost:8443";
-//var domain = "https://graugaard.bobach:8443";
+//var domain = "https://graugaard.bobach.eu:8443";
 var service = '/U2F';
 var registerRequest = {};
 
